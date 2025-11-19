@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Python Chat</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      max-width: 600px;
+      margin: 20px auto;
+    }
+    #chat-box {
+      border: 1px solid #ccc;
+      height: 400px;
+      padding: 10px;
+      overflow-y: auto;
+      margin-bottom: 10px;
+    }
+    #message-form {
+      display: flex;
+      gap: 8px;
+    }
+    #message-input {
+      flex: 1;
+      padding: 6px;
+    }
+    #username {
+      margin-bottom: 10px;
+      padding: 6px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <h1>Simple Python Chat</h1>
+
+  <input id="username" placeholder="Enter your name" />
+
+  <div id="chat-box"></div>
+
+  <form id="message-form">
+    <input id="message-input" autocomplete="off" placeholder="Type a message..." />
+    <button type="submit">Send</button>
+  </form>
+
+  <script>
+    const ws = new WebSocket(`ws://${location.host}/ws`);
+
+    const chatBox = document.getElementById("chat-box");
+    const form = document.getElementById("message-form");
+    const input = document.getElementById("message-input");
+    const usernameInput = document.getElementById("username");
+
+    ws.onmessage = (event) => {
+      const msg = event.data;
+      const div = document.createElement("div");
+      div.textContent = msg;
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    };
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const text = input.value.trim();
+      const name = usernameInput.value.trim() || "Anon";
+      if (text !== "") {
+        const fullMessage = `${name}: ${text}`;
+        ws.send(fullMessage);
+        input.value = "";
+      }
+    });
+  </script>
+</body>
+</html>
+
