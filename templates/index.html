@@ -44,13 +44,16 @@
   </form>
 
   <script>
-    const ws = new WebSocket(`ws://${location.host}/ws`);
+    // Choose ws or wss depending on HTTP or HTTPS
+    const protocol = window.location.protocol === "https:" ? "wss" : "ws";
+    const ws = new WebSocket(`${protocol}://${window.location.host}/ws`);
 
     const chatBox = document.getElementById("chat-box");
     const form = document.getElementById("message-form");
     const input = document.getElementById("message-input");
     const usernameInput = document.getElementById("username");
 
+    // When server sends a message
     ws.onmessage = (event) => {
       const msg = event.data;
       const div = document.createElement("div");
@@ -59,8 +62,9 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     };
 
+    // When user clicks Send / presses Enter
     form.addEventListener("submit", (e) => {
-      e.preventDefault();
+      e.preventDefault();  // <--- this stops the page refresh
       const text = input.value.trim();
       const name = usernameInput.value.trim() || "Anon";
       if (text !== "") {
@@ -69,7 +73,7 @@
         input.value = "";
       }
     });
-  </script>
+</script>
 </body>
 </html>
 
