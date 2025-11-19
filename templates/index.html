@@ -236,6 +236,8 @@
     const input = document.getElementById("message-input");
     const usernameInput = document.getElementById("username");
 
+    let lastSentName = null; // track last username sent to server
+
     function formatTime(isoString) {
       const d = new Date(isoString);
       let h = d.getHours();
@@ -256,18 +258,18 @@
 
       const userSpan = document.createElement("span");
       userSpan.classList.add("username");
-      userSpan.textContent = isOwn ? "You" : messageObj.username;
+      userSpan.textContent = isOwn ? "You" : (messageObj.username || "Unknown");
 
       const timeSpan = document.createElement("span");
       timeSpan.classList.add("time");
-      timeSpan.textContent = formatTime(messageObj.timestamp);
+      timeSpan.textContent = formatTime(messageObj.timestamp || new Date().toISOString());
 
       meta.appendChild(userSpan);
       meta.appendChild(timeSpan);
 
       const textDiv = document.createElement("div");
       textDiv.classList.add("text");
-      textDiv.textContent = messageObj.text;
+      textDiv.textContent = messageObj.text || "";
 
       bubble.appendChild(meta);
       bubble.appendChild(textDiv);
@@ -282,11 +284,12 @@
       try {
         data = JSON.parse(event.data);
       } catch (e) {
-        data = {
-          username: "Unknown",
-          text: event.data,
-          timestamp: new Date().toISOString()
-        };
+        // Not JSON, ignore or handle if you like
+        return;
+      }
+
+      if (data.type !== "message") {
+        return; // only show normal chat messages
       }
 
       const currentName = usernameInput.value.trim();
@@ -295,19 +298,46 @@
       appendMessage(data, isOwn);
     };
 
+    function sendJoinIfNeeded(name) {
+      if (name && name !== lastSentName) {
+        const joinMsg = {
+          type: "join",
+          username: name
+        };
+        ws.send(JSON.stringify(joinMsg));
+        lastSentName = name;
+      }
+    }
+
+    // When user sends a message
     form.addEventListener("submit", (e) => {
       e.preventDefault();
       const text = input.value.trim();
-      const name = usernameInput.value.trim() || "Anon";
+      let name = usernameInput.value.trim();
+      if (!name) {
+        name = "Anon";
+      }
 
       if (text !== "") {
+        // ensure server knows our username for admin
+        sendJoinIfNeeded(name);
+
         const message = {
+          type: "message",
           username: name,
           text: text,
           timestamp: new Date().toISOString()
         };
         ws.send(JSON.stringify(message));
         input.value = "";
+      }
+    });
+
+    // Optionally, when username field loses focus, send join
+    usernameInput.addEventListener("blur", () => {
+      const name = usernameInput.value.trim();
+      if (name) {
+        sendJoinIfNeeded(name);
       }
     });
   </script>
