@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Admin Login</title>
+    <style>
+      body { font-family: Arial; background: #0f172a; color: white; display: flex; justify-content: center; align-items: center; height: 100vh;}
+      form { background:#1e293b; padding: 20px; border-radius:12px; display:flex; flex-direction:column; gap:10px; width:260px;}
+      input { padding:8px; border-radius:6px; border:none;}
+      button { padding:10px; background:#22c55e; color:black; border:none; border-radius:6px; cursor:pointer;}
+      button:hover { filter:brightness(1.1);}
+      .error { color:#f87171; font-size:14px;}
+    </style>
+  </head>
+
+  <body>
+    <form method="post">
+      <h3>Admin Login</h3>
+      <input type="password" name="password" placeholder="Enter password" required />
+      {% if error %}<div class="error">{{ error }}</div>{% endif %}
+      <button type="submit">Login</button>
+    </form>
+  </body>
+</html>
