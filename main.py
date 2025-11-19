@@ -10,10 +10,8 @@ app = FastAPI()
 
 templates = Jinja2Templates(directory="templates")
 
-# Password / token for /admin
-# 👉 Set this in Render dashboard as environment variable ADMIN_TOKEN
-ADMIN_TOKEN = os.getenv("ADMIN_TOKEN", "changeme")  # change default if you like
 
+ADMIN_PASSWORD = "mysecret123"  # change to your own password
 
 class ConnectionManager:
     def __init__(self):
@@ -131,23 +129,19 @@ async def websocket_endpoint(websocket: WebSocket, room_name: str):
 
 
 @app.get("/admin", response_class=HTMLResponse)
-async def admin_view(request: Request, token: Optional[str] = None):
-    """
-    Simple admin page listing currently connected clients and their IPs and usernames.
+async def admin_login_page(request: Request):
+    return templates.TemplateResponse("admin_login.html", {"request": request})
 
-    Protected by a simple token:
-      /admin?token=YOUR_SECRET
-    """
-    if token != ADMIN_TOKEN:
-        # Very basic protection
-        raise HTTPException(status_code=401, detail="Unauthorized")
-
-    active_clients = manager.get_active_clients()
-    return templates.TemplateResponse(
-        "admin.html",
-        {
-            "request": request,
-            "clients": active_clients,
-            "total": len(active_clients),
-        },
-    )
+@app.post("/admin", response_class=HTMLResponse)
+async def admin_login(request: Request, password: str = Form(...)):
+    if password == ADMIN_PASSWORD:
+        active_clients = manager.get_active_clients()
+        return templates.TemplateResponse(
+            "admin.html",
+            {"request": request, "clients": active_clients, "total": len(active_clients)},
+        )
+    else:
+        return templates.TemplateResponse(
+            "admin_login.html",
+            {"request": request, "error": "Wrong password!"}
+        )
